@@ -5,3 +5,11 @@ type Option struct {
 	QuestionId  int
 	OrderNumber int
 }
+
+func NewOption(id int, questionId int, orderNumber int) *Option {
+	return &Option{
+		Id:          id,
+		QuestionId:  questionId,
+		OrderNumber: orderNumber,
+	}
+}

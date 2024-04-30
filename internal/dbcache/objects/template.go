@@ -5,3 +5,11 @@ type Template struct {
 	Code          string
 	DefaultParams string
 }
+
+func NewTemplate(id int, code string, defaultParams string) *Template {
+	return &Template{
+		Id:            id,
+		Code:          code,
+		DefaultParams: defaultParams,
+	}
+}

@@ -8,3 +8,12 @@ type Appearance struct {
 	TemplateId int
 	Params     string
 }
+
+func NewAppearance(id int, aType enums.EnumAppearanceType, templateId int, params string) *Appearance {
+	return &Appearance{
+		Id:         id,
+		Type:       aType,
+		TemplateId: templateId,
+		Params:     params,
+	}
+}
