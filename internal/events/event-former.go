@@ -2,8 +2,8 @@ package events
 
 import (
 	"fmt"
-	"project-survey-proceeder/context"
-	"project-survey-proceeder/enums"
+	"project-survey-proceeder/internal/context"
+	"project-survey-proceeder/internal/enums"
 	"strconv"
 	"strings"
 	"time"

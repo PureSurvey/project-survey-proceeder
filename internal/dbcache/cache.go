@@ -2,9 +2,8 @@ package dbcache
 
 import (
 	"database/sql"
-	"project-survey-proceeder/enums"
-	"project-survey-proceeder/internal/dbcache/contracts"
 	"project-survey-proceeder/internal/dbcache/objects"
+	enums2 "project-survey-proceeder/internal/enums"
 	"time"
 )
 
