@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package="project-survey-proceeder/internal/surveymarkup/model";
+
+package model;
+
+service SurveyMarkupGenerator {
+  rpc GenerateMarkup (GenerateMarkupRequest) returns (GenerateMarkupResponse) {}
+}
+
+message GenerateMarkupRequest {
+  int32 unitId = 1;
+  repeated int32 surveyIds = 2;
+  string language = 3;
+}
+
+message GenerateMarkupResponse {
+  string markup = 1;
+}

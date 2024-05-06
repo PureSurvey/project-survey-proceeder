@@ -1,6 +1,6 @@
 package contracts
 
-type IMessageProducer interface {
+type IEventProducer interface {
 	SendMessage(message []byte) error
 	CloseConnection() error
 }

@@ -3,14 +3,14 @@ package kafka
 import (
 	"fmt"
 	"github.com/IBM/sarama"
-	"project-survey-proceeder/contracts"
+	"project-survey-proceeder/internal/events/contracts"
 )
 
-type KafkaProducer struct {
+type Producer struct {
 	producer sarama.SyncProducer
 }
 
-func InitProducer(url string) (contracts.IMessageProducer, error) {
+func InitProducer(url string) (contracts.IEventProducer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 
@@ -20,11 +20,11 @@ func InitProducer(url string) (contracts.IMessageProducer, error) {
 		return nil, err
 	}
 
-	producer := &KafkaProducer{kafkaProducer}
+	producer := &Producer{kafkaProducer}
 	return producer, nil
 }
 
-func (k *KafkaProducer) SendMessage(message []byte) error {
+func (k *Producer) SendMessage(message []byte) error {
 	topic := "my-topic"
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
@@ -40,6 +40,6 @@ func (k *KafkaProducer) SendMessage(message []byte) error {
 	return nil
 }
 
-func (k *KafkaProducer) CloseConnection() error {
+func (k *Producer) CloseConnection() error {
 	return k.producer.Close()
 }

@@ -1,6 +1,8 @@
 package objects
 
-import "project-survey-proceeder/enums"
+import (
+	"project-survey-proceeder/internal/enums"
+)
 
 type Appearance struct {
 	Id         int
