@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/IBM/sarama v1.42.1
 	github.com/ferluci/fast-realip v1.0.1
+	github.com/ip2location/ip2location-go/v9 v9.7.0
 	github.com/microsoft/go-mssqldb v1.7.1
 	github.com/mssola/useragent v1.0.0
 	github.com/valyala/fasthttp v1.51.0
@@ -35,4 +36,5 @@ require (
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
+	lukechampine.com/uint128 v1.2.0 // indirect
 )

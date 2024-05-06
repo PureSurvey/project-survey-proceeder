@@ -3,6 +3,7 @@ package enums
 type EnumEventType int
 
 const (
-	SurveyStart EnumEventType = iota
+	Unknown EnumEventType = iota
+	SurveyStart
 	SurveyClose
 )
