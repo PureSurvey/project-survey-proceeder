@@ -3,10 +3,13 @@ package context
 import (
 	"project-survey-proceeder/internal/enums"
 	"project-survey-proceeder/internal/events/contracts"
+	"time"
 )
 
 type ProceederContext struct {
 	MessageProducer contracts.IEventProducer
+
+	RequestTimestamp time.Time
 
 	UnitId int
 

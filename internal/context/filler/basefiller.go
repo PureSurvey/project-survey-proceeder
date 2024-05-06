@@ -8,6 +8,7 @@ import (
 	"project-survey-proceeder/internal/enums"
 	geolocationcontracts "project-survey-proceeder/internal/geolocation/contracts"
 	"project-survey-proceeder/internal/pools"
+	"time"
 )
 
 type BaseFiller struct {
@@ -23,6 +24,8 @@ func (f *BaseFiller) FillFromRequest(prCtx *context.ProceederContext, ctx *fasth
 	if ctx.QueryArgs() == nil {
 		return fmt.Errorf("nil query args")
 	}
+
+	prCtx.RequestTimestamp = time.Now().UTC()
 
 	f.fillUserAgent(prCtx, ctx)
 	f.fillIp(prCtx, ctx)

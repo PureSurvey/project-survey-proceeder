@@ -3,13 +3,28 @@ package request
 import (
 	"github.com/valyala/fasthttp"
 	"project-survey-proceeder/internal/context"
+	contextcontracts "project-survey-proceeder/internal/context/contracts"
+	"project-survey-proceeder/internal/dbcache"
 	"project-survey-proceeder/internal/events"
-	"project-survey-proceeder/internal/services/contracts"
+	targetingcontracts "project-survey-proceeder/internal/targeting/contracts"
 )
 
 type Handler struct {
-	ProceederContext *context.ProceederContext
-	ServiceProvider  contracts.IServiceProvider
+	dbRepo              *dbcache.Repo
+	contextFiller       contextcontracts.IRequestFiller
+	targetingService    targetingcontracts.ITargetingService
+	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService
+}
+
+func NewHandler(dbRepo *dbcache.Repo,
+	contextFiller contextcontracts.IRequestFiller, targetingService targetingcontracts.ITargetingService,
+	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService) *Handler {
+	return &Handler{
+		dbRepo:              dbRepo,
+		contextFiller:       contextFiller,
+		targetingService:    targetingService,
+		surveyMarkupService: surveyMarkupService,
+	}
 }
 
 func (h *Handler) Handle(ctx *fasthttp.RequestCtx) {
@@ -24,36 +39,58 @@ func (h *Handler) Handle(ctx *fasthttp.RequestCtx) {
 }
 
 func (h *Handler) handleUnitRequest(ctx *fasthttp.RequestCtx) {
-	filler := h.ServiceProvider.GetContextFiller()
+	prCtx := &context.ProceederContext{}
 
-	err := filler.FillFromRequest(h.ProceederContext, ctx)
+	err := h.contextFiller.FillFromRequest(prCtx, ctx)
 	if err != nil {
 		ctx.Error("", fasthttp.StatusNoContent)
 		return
 	}
 
-	// eventString := events.GetEventString(prCtx)
+	if prCtx.UnitId == 0 {
+		ctx.Error("", fasthttp.StatusNoContent)
+		return
+	}
 
-	// err = prCtx.MessageProducer.SendMessage([]byte(eventString))
-	// if err != nil {
-	// ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-	// }
+	unit := h.dbRepo.GetUnitById(prCtx.UnitId)
+	if unit == nil {
+		ctx.Error("", fasthttp.StatusNoContent)
+		return
+	}
+
+	surveys := h.dbRepo.GetSurveysByUnitId(unit.Id)
+	if surveys == nil {
+		ctx.Error("", fasthttp.StatusNoContent)
+		return
+	}
+
+	var matchedSurveyIds []int
+	for _, survey := range surveys {
+		if survey.IsActiveOnDate(prCtx.RequestTimestamp) && h.targetingService.IsMatched(survey, prCtx) {
+			matchedSurveyIds = append(matchedSurveyIds, survey.Id)
+		}
+	}
+
+	if len(matchedSurveyIds) == 0 {
+		ctx.Error("", fasthttp.StatusNoContent)
+		return
+	}
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
 func (h *Handler) handleSurveyEvent(ctx *fasthttp.RequestCtx) {
-	filler := h.ServiceProvider.GetContextFiller()
+	prCtx := &context.ProceederContext{}
 
-	err := filler.FillFromRequest(h.ProceederContext, ctx)
+	err := h.contextFiller.FillFromRequest(prCtx, ctx)
 	if err != nil {
 		ctx.Error("Invalid request", fasthttp.StatusBadRequest)
 		return
 	}
 
-	eventString := events.GetEventString(h.ProceederContext)
+	eventString := events.GetEventString(prCtx)
 
-	err = h.ProceederContext.MessageProducer.SendMessage([]byte(eventString))
+	err = prCtx.MessageProducer.SendMessage([]byte(eventString))
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 	}

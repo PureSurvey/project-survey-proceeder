@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/valyala/fasthttp"
+	"log"
 	"os"
 	"os/signal"
-	"project-survey-proceeder/internal/context"
+	"project-survey-proceeder/internal/configuration"
 	"project-survey-proceeder/internal/request"
 	"project-survey-proceeder/internal/services"
 	"syscall"
@@ -28,9 +29,16 @@ func main() {
 	//}
 	//defer messageProducer.CloseConnection()
 
-	serviceProvider := services.NewProvider()
-	prCtx := &context.ProceederContext{}
-	requestHandler := request.Handler{ProceederContext: prCtx, ServiceProvider: serviceProvider}
+	parser := configuration.NewParser()
+	config, err := parser.Parse("appsettings.json")
+	if err != nil {
+		log.Fatalf(err.Error())
+		return
+	}
+
+	serviceProvider := services.NewProvider(config)
+	requestHandler := request.NewHandler(serviceProvider.GetDbRepo(), serviceProvider.GetContextFiller(),
+		serviceProvider.GetTargetingService(), serviceProvider.GetSurveyMarkupService())
 
 	go func() {
 		if err := fasthttp.ListenAndServe(host, requestHandler.Handle); err != nil {
