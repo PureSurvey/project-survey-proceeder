@@ -6,6 +6,7 @@ import (
 	contextcontracts "project-survey-proceeder/internal/context/contracts"
 	"project-survey-proceeder/internal/dbcache"
 	"project-survey-proceeder/internal/events"
+	surveymarkupcontracts "project-survey-proceeder/internal/surveymarkup/contracts"
 	targetingcontracts "project-survey-proceeder/internal/targeting/contracts"
 )
 
@@ -76,6 +77,13 @@ func (h *Handler) handleUnitRequest(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	markup, err := h.surveyMarkupService.GetMarkup(unit.Id, matchedSurveyIds, "")
+	if err != nil {
+		ctx.Error("", fasthttp.StatusNoContent)
+		return
+	}
+
+	ctx.SetBody([]byte(markup))
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
