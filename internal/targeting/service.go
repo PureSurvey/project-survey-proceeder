@@ -5,14 +5,15 @@ import (
 	"project-survey-proceeder/internal/dbcache"
 	"project-survey-proceeder/internal/dbcache/objects"
 	"project-survey-proceeder/internal/targeting/contracts"
+	"strings"
 )
 
 type Service struct {
 	dbRepo *dbcache.Repo
 }
 
-func NewTargetingService() contracts.ITargetingService {
-	return &Service{}
+func NewTargetingService(dbRepo *dbcache.Repo) contracts.ITargetingService {
+	return &Service{dbRepo: dbRepo}
 }
 
 func (s *Service) IsMatched(survey *objects.Survey, prCtx *context.ProceederContext) bool {
@@ -22,7 +23,7 @@ func (s *Service) IsMatched(survey *objects.Survey, prCtx *context.ProceederCont
 func (s *Service) isMatchedByCountry(survey *objects.Survey, country string) bool {
 	countries := s.dbRepo.GetCountriesByTargetingId(survey.TargetingId)
 	for _, ctr := range countries {
-		if country == ctr {
+		if strings.ToLower(country) == ctr {
 			return true
 		}
 	}

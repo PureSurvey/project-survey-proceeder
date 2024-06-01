@@ -141,7 +141,7 @@ func (c *Cache) fillCountryInTargetings(rows *sql.Rows) error {
 			return err
 		}
 
-		c.CountryInTargeting[targetingId] = append(c.CountryInTargeting[targetingId], code)
+		c.CountryInTargeting[targetingId] = append(c.CountryInTargeting[targetingId], strings.ToLower(code))
 	}
 
 	return nil
