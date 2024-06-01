@@ -1,6 +1,14 @@
 package configuration
 
 type AppConfiguration struct {
-	DbConnectionString     string `json:"dbConnectionString"`
-	SurveyGeneratorAddress string `json:"surveyGeneratorAddress"`
+	SurveyGeneratorAddress string                `json:"surveyGeneratorAddress"`
+	DbCacheConfiguration   *DbCacheConfiguration `json:"dbCacheConfiguration"`
+}
+
+type DbCacheConfiguration struct {
+	ConnectionRetryCount     int    `json:"connectionRetryCount"`
+	ConnectionRetrySleepTime int    `json:"connectionRetryTimeout"`
+	ConnectionString         string `json:"connectionString"`
+	StoredProcedure          string `json:"storedProcedure"`
+	ReloadSleepTime          int    `json:"reloadSleepTime"`
 }

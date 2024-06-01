@@ -1,8 +1,10 @@
 package dbcache
 
 import (
+	"project-survey-proceeder/internal/configuration"
 	"project-survey-proceeder/internal/dbcache/contracts"
 	"project-survey-proceeder/internal/dbcache/objects"
+	"time"
 )
 
 const (
@@ -10,16 +12,25 @@ const (
 )
 
 type Repo struct {
+	config *configuration.DbCacheConfiguration
 	reader contracts.IReader
 	cache  *Cache
 }
 
-func NewRepo(reader contracts.IReader) *Repo {
-	return &Repo{reader: reader}
+func NewRepo(config *configuration.DbCacheConfiguration, reader contracts.IReader) *Repo {
+	return &Repo{reader: reader, config: config}
 }
 
-func (r *Repo) Reload() {
+func (r *Repo) RunReloadCycle() {
+	for {
+		r.reload()
+		time.Sleep(time.Duration(r.config.ReloadSleepTime) * time.Second)
+	}
+}
+
+func (r *Repo) reload() {
 	err := r.reader.Connect()
+	defer r.reader.CloseConnection()
 	if err != nil {
 		return
 	}

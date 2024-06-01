@@ -2,6 +2,7 @@ package geolocation
 
 import (
 	"github.com/ip2location/ip2location-go/v9"
+	"path/filepath"
 	"project-survey-proceeder/internal/geolocation/contracts"
 )
 
@@ -14,7 +15,8 @@ func NewService() contracts.IGeolocationService {
 }
 
 func (s *Service) Init() error {
-	db, err := ip2location.OpenDB("..\\..\\ip2location\\ip2location.bin")
+	path, _ := filepath.Abs("thirdparty/ip2location/ip2location.BIN")
+	db, err := ip2location.OpenDB(path)
 	if err != nil {
 		return err
 	}

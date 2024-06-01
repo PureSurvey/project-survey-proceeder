@@ -12,14 +12,7 @@ import (
 	"syscall"
 )
 
-var messageProducerUrl = "localhost:9092"
 var host = ":5126"
-
-var server = "project-survey-diploma.database.windows.net"
-var port = 1433
-var user = "diplomaAdmin"
-var password = "ktXw#A84tY!$7ig"
-var database = "ProjectSurveyDb"
 
 func main() {
 	//messageProducer, err := kafka.InitProducer(messageProducerUrl)
@@ -52,13 +45,4 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
-
-	//connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s;",
-	//	server, user, password, port, database)
-	//
-	//newReader := reader.NewSqlReader(connString)
-	//
-	//cache := dbcache.NewRepo(newReader)
-	//
-	//cache.Reload()
 }

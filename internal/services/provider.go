@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/valyala/fastjson"
+	"log"
 	"project-survey-proceeder/internal/configuration"
 	contextcontracts "project-survey-proceeder/internal/context/contracts"
 	"project-survey-proceeder/internal/context/filler"
@@ -28,20 +29,26 @@ type Provider struct {
 }
 
 func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontracts.IServiceProvider {
-	dbReader := reader.NewSqlReader(appConfiguration.SurveyGeneratorAddress)
+	dbReader := reader.NewSqlReader(appConfiguration.DbCacheConfiguration)
+	dbRepo := dbcache.NewRepo(appConfiguration.DbCacheConfiguration, dbReader)
+	go dbRepo.RunReloadCycle()
+
+	userAgentPool := &pools.UserAgentPool{}
+	geolocationService := geolocation.NewService()
+	err := geolocationService.Init()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 
 	provider := &Provider{
 		parserPool:          &fastjson.ParserPool{},
-		userAgentPool:       &pools.UserAgentPool{},
-		geolocationService:  geolocation.NewService(),
-		targetingService:    targeting.NewTargetingService(),
+		userAgentPool:       userAgentPool,
+		geolocationService:  geolocationService,
+		targetingService:    targeting.NewTargetingService(dbRepo),
 		surveyMarkupService: surveymarkup.NewService(appConfiguration.SurveyGeneratorAddress),
-		dbRepo:              dbcache.NewRepo(dbReader),
+		dbRepo:              dbRepo,
+		contextFiller:       filler.NewBaseFiller(userAgentPool, geolocationService),
 	}
-
-	provider.dbRepo.Reload()
-
-	provider.contextFiller = filler.NewBaseFiller(provider.userAgentPool, provider.geolocationService)
 
 	return provider
 }

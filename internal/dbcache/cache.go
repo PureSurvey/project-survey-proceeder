@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"project-survey-proceeder/internal/dbcache/objects"
 	enums2 "project-survey-proceeder/internal/enums"
+	"strings"
 	"time"
 )
 
@@ -141,7 +142,7 @@ func (c *Cache) fillCountryInTargetings(rows *sql.Rows) error {
 			return err
 		}
 
-		c.CountryInTargeting[targetingId] = append(c.CountryInTargeting[targetingId], code)
+		c.CountryInTargeting[targetingId] = append(c.CountryInTargeting[targetingId], strings.ToLower(code))
 	}
 
 	return nil
