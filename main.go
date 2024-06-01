@@ -28,7 +28,8 @@ func main() {
 	}
 
 	serviceProvider := services.NewProvider(config)
-	requestHandler := request.NewHandler(serviceProvider.GetDbRepo(), serviceProvider.GetContextFiller(),
+	requestHandler := request.NewHandler(serviceProvider.GetDbRepo(), serviceProvider.GetUnitContextFiller(),
+		serviceProvider.GetEventContextFiller(),
 		serviceProvider.GetTargetingService(), serviceProvider.GetSurveyMarkupService())
 
 	go func() {

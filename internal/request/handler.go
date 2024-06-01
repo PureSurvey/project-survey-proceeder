@@ -5,24 +5,26 @@ import (
 	"project-survey-proceeder/internal/context"
 	contextcontracts "project-survey-proceeder/internal/context/contracts"
 	"project-survey-proceeder/internal/dbcache"
-	"project-survey-proceeder/internal/events"
 	surveymarkupcontracts "project-survey-proceeder/internal/surveymarkup/contracts"
 	targetingcontracts "project-survey-proceeder/internal/targeting/contracts"
 )
 
 type Handler struct {
 	dbRepo              *dbcache.Repo
-	contextFiller       contextcontracts.IRequestFiller
+	unitContextFiller   contextcontracts.IRequestFiller
+	eventContextFiller  contextcontracts.IRequestFiller
 	targetingService    targetingcontracts.ITargetingService
 	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService
 }
 
 func NewHandler(dbRepo *dbcache.Repo,
-	contextFiller contextcontracts.IRequestFiller, targetingService targetingcontracts.ITargetingService,
+	unitContextFiller contextcontracts.IRequestFiller, eventContextFiller contextcontracts.IRequestFiller,
+	targetingService targetingcontracts.ITargetingService,
 	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService) *Handler {
 	return &Handler{
 		dbRepo:              dbRepo,
-		contextFiller:       contextFiller,
+		unitContextFiller:   unitContextFiller,
+		eventContextFiller:  eventContextFiller,
 		targetingService:    targetingService,
 		surveyMarkupService: surveyMarkupService,
 	}
@@ -32,7 +34,7 @@ func (h *Handler) Handle(ctx *fasthttp.RequestCtx) {
 	switch string(ctx.Path()) {
 	case "/unit":
 		h.handleUnitRequest(ctx)
-	case "/sev":
+	case "/event":
 		h.handleSurveyEvent(ctx)
 	default:
 		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
@@ -42,7 +44,7 @@ func (h *Handler) Handle(ctx *fasthttp.RequestCtx) {
 func (h *Handler) handleUnitRequest(ctx *fasthttp.RequestCtx) {
 	prCtx := &context.ProceederContext{}
 
-	err := h.contextFiller.FillFromRequest(prCtx, ctx)
+	err := h.unitContextFiller.FillFromRequest(prCtx, ctx)
 	if err != nil {
 		ctx.Error("", fasthttp.StatusNoContent)
 		return
@@ -77,7 +79,7 @@ func (h *Handler) handleUnitRequest(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	markup, err := h.surveyMarkupService.GetMarkup(unit.Id, matchedSurveyIds, "")
+	markup, err := h.surveyMarkupService.GetMarkup(unit.Id, matchedSurveyIds, "en")
 	if err != nil {
 		ctx.Error("", fasthttp.StatusNoContent)
 		return
@@ -90,18 +92,22 @@ func (h *Handler) handleUnitRequest(ctx *fasthttp.RequestCtx) {
 func (h *Handler) handleSurveyEvent(ctx *fasthttp.RequestCtx) {
 	prCtx := &context.ProceederContext{}
 
-	err := h.contextFiller.FillFromRequest(prCtx, ctx)
+	err := h.eventContextFiller.FillFromRequest(prCtx, ctx)
 	if err != nil {
 		ctx.Error("Invalid request", fasthttp.StatusBadRequest)
 		return
 	}
 
-	eventString := events.GetEventString(prCtx)
+	if prCtx.IsMismatched() {
 
-	err = prCtx.MessageProducer.SendMessage([]byte(eventString))
-	if err != nil {
-		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 	}
+
+	//eventString := events.GetEventString(prCtx)
+	//
+	//err = prCtx.MessageProducer.SendMessage([]byte(eventString))
+	//if err != nil {
+	//	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+	//}
 
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }

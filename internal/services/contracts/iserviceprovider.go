@@ -8,7 +8,8 @@ import (
 )
 
 type IServiceProvider interface {
-	GetContextFiller() contextcontracts.IRequestFiller
+	GetUnitContextFiller() contextcontracts.IRequestFiller
+	GetEventContextFiller() contextcontracts.IRequestFiller
 	GetDbRepo() *dbcache.Repo
 	GetTargetingService() contracts.ITargetingService
 	GetSurveyMarkupService() surveymarkupcontracts.ISurveyMarkupService

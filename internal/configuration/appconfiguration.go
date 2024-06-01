@@ -3,6 +3,7 @@ package configuration
 type AppConfiguration struct {
 	Host                   string                `json:"host"`
 	SurveyGeneratorAddress string                `json:"surveyGeneratorAddress"`
+	EncryptionSecret       string                `json:"encryptionSecret"` // 32 bytes
 	DbCacheConfiguration   *DbCacheConfiguration `json:"dbCacheConfiguration"`
 }
 

@@ -19,7 +19,7 @@ type event struct {
 	Platform  string
 	IsMobile  bool
 
-	EventType enums.EnumEventType
+	EventType enums.EventType
 }
 
 func GetEventString(ptCtx *context.ProceederContext) string {

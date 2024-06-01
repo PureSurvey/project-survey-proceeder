@@ -16,6 +16,7 @@ import (
 	surveymarkupcontracts "project-survey-proceeder/internal/surveymarkup/contracts"
 	"project-survey-proceeder/internal/targeting"
 	"project-survey-proceeder/internal/targeting/contracts"
+	"project-survey-proceeder/internal/trackers"
 )
 
 type Provider struct {
@@ -23,9 +24,11 @@ type Provider struct {
 	userAgentPool       *pools.UserAgentPool
 	geolocationService  geolocationcontracts.IGeolocationService
 	targetingService    contracts.ITargetingService
-	contextFiller       contextcontracts.IRequestFiller
+	unitContextFiller   contextcontracts.IRequestFiller
+	eventContextFiller  contextcontracts.IRequestFiller
 	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService
 	dbRepo              *dbcache.Repo
+	decryptor           *trackers.Decryptor
 }
 
 func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontracts.IServiceProvider {
@@ -40,6 +43,8 @@ func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontr
 		log.Fatalf(err.Error())
 	}
 
+	decryptor := trackers.NewDecryptor(appConfiguration)
+
 	provider := &Provider{
 		parserPool:          &fastjson.ParserPool{},
 		userAgentPool:       userAgentPool,
@@ -47,7 +52,9 @@ func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontr
 		targetingService:    targeting.NewTargetingService(dbRepo),
 		surveyMarkupService: surveymarkup.NewService(appConfiguration.SurveyGeneratorAddress),
 		dbRepo:              dbRepo,
-		contextFiller:       filler.NewBaseFiller(userAgentPool, geolocationService),
+		decryptor:           decryptor,
+		unitContextFiller:   filler.NewUnitFiller(userAgentPool, geolocationService),
+		eventContextFiller:  filler.NewEventFiller(userAgentPool, geolocationService, decryptor),
 	}
 
 	return provider
@@ -61,8 +68,12 @@ func (p *Provider) GetTargetingService() contracts.ITargetingService {
 	return p.targetingService
 }
 
-func (p *Provider) GetContextFiller() contextcontracts.IRequestFiller {
-	return p.contextFiller
+func (p *Provider) GetUnitContextFiller() contextcontracts.IRequestFiller {
+	return p.unitContextFiller
+}
+
+func (p *Provider) GetEventContextFiller() contextcontracts.IRequestFiller {
+	return p.eventContextFiller
 }
 
 func (p *Provider) GetSurveyMarkupService() surveymarkupcontracts.ISurveyMarkupService {
