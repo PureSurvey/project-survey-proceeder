@@ -35,6 +35,10 @@ func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontr
 
 	userAgentPool := &pools.UserAgentPool{}
 	geolocationService := geolocation.NewService()
+	err := geolocationService.Init()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 
 	provider := &Provider{
 		parserPool:          &fastjson.ParserPool{},
