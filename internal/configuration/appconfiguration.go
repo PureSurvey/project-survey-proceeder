@@ -1,6 +1,7 @@
 package configuration
 
 type AppConfiguration struct {
+	Host                   string                `json:"host"`
 	SurveyGeneratorAddress string                `json:"surveyGeneratorAddress"`
 	DbCacheConfiguration   *DbCacheConfiguration `json:"dbCacheConfiguration"`
 }
