@@ -10,4 +10,6 @@ const (
 	ETSurveyStart
 	ETSurveyEnd
 	ETUnitEnd
+	ETUnitRequest
+	ETUnitResponse
 )

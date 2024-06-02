@@ -23,6 +23,7 @@ type ProceederContext struct {
 	IsMobile  bool
 
 	Country    string
+	Language   string
 	Longtitude string
 	Latitude   string
 

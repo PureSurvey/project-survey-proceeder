@@ -1,45 +1,60 @@
 package kafka
 
 import (
-	"fmt"
 	"github.com/IBM/sarama"
-	"project-survey-proceeder/internal/events/contracts"
+	"github.com/google/uuid"
+	"log"
+	"os"
+	"project-survey-proceeder/internal/configuration"
+	"time"
 )
 
 type Producer struct {
-	producer sarama.SyncProducer
+	producer sarama.AsyncProducer
+	config   *configuration.EventsConfiguration
 }
 
-func InitProducer(url string) (contracts.IEventProducer, error) {
+func NewProducer(config *configuration.EventsConfiguration) *Producer {
+	return &Producer{config: config}
+}
+
+func (p *Producer) Init() error {
 	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
+	config.Metadata.Retry.Backoff = 500 * time.Millisecond
 
-	brokerList := []string{url}
-	kafkaProducer, err := sarama.NewSyncProducer(brokerList, config)
+	brokerList := []string{p.config.BrokerUrl}
+	kafkaProducer, err := sarama.NewAsyncProducer(brokerList, config)
 	if err != nil {
-		return nil, err
-	}
-
-	producer := &Producer{kafkaProducer}
-	return producer, nil
-}
-
-func (k *Producer) SendMessage(message []byte) error {
-	topic := "my-topic"
-	msg := &sarama.ProducerMessage{
-		Topic: topic,
-		Value: sarama.StringEncoder(message),
-	}
-
-	_, _, err := k.producer.SendMessage(msg)
-	if err != nil {
-		fmt.Printf("Error producing message to Kafka: %v\n", err)
 		return err
 	}
+
+	p.producer = kafkaProducer
+	go p.listenToErrors()
 
 	return nil
 }
 
-func (k *Producer) CloseConnection() error {
-	return k.producer.Close()
+func (p *Producer) AsyncSendMessage(message []byte) {
+	msg := &sarama.ProducerMessage{
+		Topic: p.config.Topic,
+		Value: sarama.StringEncoder(message),
+	}
+
+	p.producer.Input() <- msg
+}
+
+func (p *Producer) CloseConnection() {
+	if p.producer != nil {
+		p.producer.AsyncClose()
+	}
+}
+
+func (p *Producer) listenToErrors() {
+	for {
+		err := <-p.producer.Errors()
+		log.Printf(err.Error())
+		filename := time.Now().UTC().String() + "_" + uuid.New().String()
+		val, _ := err.Msg.Value.Encode()
+		os.WriteFile(filename, val, os.ModeDir)
+	}
 }

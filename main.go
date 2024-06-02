@@ -30,7 +30,7 @@ func main() {
 	serviceProvider := services.NewProvider(config)
 	requestHandler := request.NewHandler(serviceProvider.GetDbRepo(), serviceProvider.GetUnitContextFiller(),
 		serviceProvider.GetEventContextFiller(),
-		serviceProvider.GetTargetingService(), serviceProvider.GetSurveyMarkupService())
+		serviceProvider.GetTargetingService(), serviceProvider.GetSurveyMarkupService(), serviceProvider.GetEventProducer())
 
 	go func() {
 		if err := fasthttp.ListenAndServe(config.Host, requestHandler.Handle); err != nil {

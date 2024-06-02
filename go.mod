@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/IBM/sarama v1.42.1
 	github.com/ferluci/fast-realip v1.0.1
+	github.com/google/uuid v1.6.0
 	github.com/ip2location/ip2location-go/v9 v9.7.0
 	github.com/microsoft/go-mssqldb v1.7.1
 	github.com/mssola/useragent v1.0.0

@@ -8,6 +8,8 @@ import (
 	"project-survey-proceeder/internal/context/filler"
 	"project-survey-proceeder/internal/dbcache"
 	"project-survey-proceeder/internal/dbcache/reader"
+	eventcontracts "project-survey-proceeder/internal/events/contracts"
+	"project-survey-proceeder/internal/events/kafka"
 	"project-survey-proceeder/internal/geolocation"
 	geolocationcontracts "project-survey-proceeder/internal/geolocation/contracts"
 	"project-survey-proceeder/internal/pools"
@@ -29,6 +31,7 @@ type Provider struct {
 	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService
 	dbRepo              *dbcache.Repo
 	decryptor           *trackers.Decryptor
+	eventProducer       eventcontracts.IEventProducer
 }
 
 func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontracts.IServiceProvider {
@@ -45,6 +48,12 @@ func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontr
 
 	decryptor := trackers.NewDecryptor(appConfiguration)
 
+	eventProducer := kafka.NewProducer(appConfiguration.EventsConfiguration)
+	err = eventProducer.Init()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
 	provider := &Provider{
 		parserPool:          &fastjson.ParserPool{},
 		userAgentPool:       userAgentPool,
@@ -53,6 +62,7 @@ func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontr
 		surveyMarkupService: surveymarkup.NewService(appConfiguration.SurveyGeneratorAddress),
 		dbRepo:              dbRepo,
 		decryptor:           decryptor,
+		eventProducer:       eventProducer,
 		unitContextFiller:   filler.NewUnitFiller(userAgentPool, geolocationService),
 		eventContextFiller:  filler.NewEventFiller(userAgentPool, geolocationService, decryptor),
 	}
@@ -78,4 +88,8 @@ func (p *Provider) GetEventContextFiller() contextcontracts.IRequestFiller {
 
 func (p *Provider) GetSurveyMarkupService() surveymarkupcontracts.ISurveyMarkupService {
 	return p.surveyMarkupService
+}
+
+func (p *Provider) GetEventProducer() eventcontracts.IEventProducer {
+	return p.eventProducer
 }

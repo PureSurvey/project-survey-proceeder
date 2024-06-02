@@ -2,11 +2,15 @@ package request
 
 import (
 	"github.com/valyala/fasthttp"
+	"google.golang.org/protobuf/proto"
 	"project-survey-proceeder/internal/context"
 	contextcontracts "project-survey-proceeder/internal/context/contracts"
 	"project-survey-proceeder/internal/dbcache"
+	"project-survey-proceeder/internal/events/contracts"
+	"project-survey-proceeder/internal/events/model/pb"
 	surveymarkupcontracts "project-survey-proceeder/internal/surveymarkup/contracts"
 	targetingcontracts "project-survey-proceeder/internal/targeting/contracts"
+	"project-survey-proceeder/internal/utils"
 )
 
 type Handler struct {
@@ -15,18 +19,21 @@ type Handler struct {
 	eventContextFiller  contextcontracts.IRequestFiller
 	targetingService    targetingcontracts.ITargetingService
 	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService
+	eventProducer       contracts.IEventProducer
 }
 
 func NewHandler(dbRepo *dbcache.Repo,
 	unitContextFiller contextcontracts.IRequestFiller, eventContextFiller contextcontracts.IRequestFiller,
 	targetingService targetingcontracts.ITargetingService,
-	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService) *Handler {
+	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService,
+	eventProducer contracts.IEventProducer) *Handler {
 	return &Handler{
 		dbRepo:              dbRepo,
 		unitContextFiller:   unitContextFiller,
 		eventContextFiller:  eventContextFiller,
 		targetingService:    targetingService,
 		surveyMarkupService: surveyMarkupService,
+		eventProducer:       eventProducer,
 	}
 }
 
@@ -98,16 +105,19 @@ func (h *Handler) handleSurveyEvent(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if prCtx.IsMismatched() {
-
+	completionEvent := &pb.CompletionEvent{
+		EventType:  int32(prCtx.EventType),
+		Timestamp:  prCtx.RequestTimestamp.Unix(),
+		SurveyId:   int32(prCtx.SurveyId),
+		QuestionId: int32(prCtx.QuestionId),
+		OptionIds:  utils.ConvertInts[int32](prCtx.OptionIds),
+		Geo:        prCtx.Country,
+		Lang:       prCtx.Language,
+		Gender:     0,
 	}
 
-	//eventString := events.GetEventString(prCtx)
-	//
-	//err = prCtx.MessageProducer.SendMessage([]byte(eventString))
-	//if err != nil {
-	//	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-	//}
+	bytes, _ := proto.Marshal(completionEvent)
+	h.eventProducer.AsyncSendMessage(bytes)
 
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }

@@ -5,6 +5,7 @@ type AppConfiguration struct {
 	SurveyGeneratorAddress string                `json:"surveyGeneratorAddress"`
 	EncryptionSecret       string                `json:"encryptionSecret"` // 32 bytes
 	DbCacheConfiguration   *DbCacheConfiguration `json:"dbCacheConfiguration"`
+	EventsConfiguration    *EventsConfiguration  `json:"eventsConfiguration"`
 }
 
 type DbCacheConfiguration struct {
@@ -13,4 +14,9 @@ type DbCacheConfiguration struct {
 	ConnectionString         string `json:"connectionString"`
 	StoredProcedure          string `json:"storedProcedure"`
 	ReloadSleepTime          int    `json:"reloadSleepTime"`
+}
+
+type EventsConfiguration struct {
+	BrokerUrl string `json:"brokerUrl"`
+	Topic     string `json:"topic"`
 }
