@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "project-survey-proceeder/internal/events/model/pb";
+
+package pb;
+
+message CompletionEvent {
+  int32 event_type = 1;
+  int64 timestamp = 2;
+  int32 survey_id = 3;
+  int32 question_id = 4;
+  int32 mismatched_reason = 5;
+  repeated int32 option_ids = 6;
+  string geo = 7;
+  string lang = 8;
+  int32 gender = 9;
+}

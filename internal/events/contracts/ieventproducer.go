@@ -1,6 +1,7 @@
 package contracts
 
 type IEventProducer interface {
-	SendMessage(message []byte) error
-	CloseConnection() error
+	Init() error
+	AsyncSendMessage(message []byte)
+	CloseConnection()
 }

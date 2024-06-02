@@ -11,7 +11,10 @@ type ProceederContext struct {
 
 	RequestTimestamp time.Time
 
-	UnitId int
+	UnitId     int
+	SurveyId   int
+	QuestionId int
+	OptionIds  []int
 
 	Ip string
 
@@ -20,10 +23,16 @@ type ProceederContext struct {
 	IsMobile  bool
 
 	Country    string
+	Language   string
 	Longtitude string
 	Latitude   string
 
 	UserCookie string
 
-	EventType enums.EnumEventType
+	EventType      enums.EventType
+	MismatchReason enums.MismatchReason
+}
+
+func (pc *ProceederContext) IsMismatched() bool {
+	return pc.MismatchReason != enums.MRUnknown
 }

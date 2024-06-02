@@ -2,29 +2,38 @@ package request
 
 import (
 	"github.com/valyala/fasthttp"
+	"google.golang.org/protobuf/proto"
 	"project-survey-proceeder/internal/context"
 	contextcontracts "project-survey-proceeder/internal/context/contracts"
 	"project-survey-proceeder/internal/dbcache"
-	"project-survey-proceeder/internal/events"
+	"project-survey-proceeder/internal/events/contracts"
+	"project-survey-proceeder/internal/events/model/pb"
 	surveymarkupcontracts "project-survey-proceeder/internal/surveymarkup/contracts"
 	targetingcontracts "project-survey-proceeder/internal/targeting/contracts"
+	"project-survey-proceeder/internal/utils"
 )
 
 type Handler struct {
 	dbRepo              *dbcache.Repo
-	contextFiller       contextcontracts.IRequestFiller
+	unitContextFiller   contextcontracts.IRequestFiller
+	eventContextFiller  contextcontracts.IRequestFiller
 	targetingService    targetingcontracts.ITargetingService
 	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService
+	eventProducer       contracts.IEventProducer
 }
 
 func NewHandler(dbRepo *dbcache.Repo,
-	contextFiller contextcontracts.IRequestFiller, targetingService targetingcontracts.ITargetingService,
-	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService) *Handler {
+	unitContextFiller contextcontracts.IRequestFiller, eventContextFiller contextcontracts.IRequestFiller,
+	targetingService targetingcontracts.ITargetingService,
+	surveyMarkupService surveymarkupcontracts.ISurveyMarkupService,
+	eventProducer contracts.IEventProducer) *Handler {
 	return &Handler{
 		dbRepo:              dbRepo,
-		contextFiller:       contextFiller,
+		unitContextFiller:   unitContextFiller,
+		eventContextFiller:  eventContextFiller,
 		targetingService:    targetingService,
 		surveyMarkupService: surveyMarkupService,
+		eventProducer:       eventProducer,
 	}
 }
 
@@ -32,7 +41,7 @@ func (h *Handler) Handle(ctx *fasthttp.RequestCtx) {
 	switch string(ctx.Path()) {
 	case "/unit":
 		h.handleUnitRequest(ctx)
-	case "/sev":
+	case "/event":
 		h.handleSurveyEvent(ctx)
 	default:
 		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
@@ -42,7 +51,7 @@ func (h *Handler) Handle(ctx *fasthttp.RequestCtx) {
 func (h *Handler) handleUnitRequest(ctx *fasthttp.RequestCtx) {
 	prCtx := &context.ProceederContext{}
 
-	err := h.contextFiller.FillFromRequest(prCtx, ctx)
+	err := h.unitContextFiller.FillFromRequest(prCtx, ctx)
 	if err != nil {
 		ctx.Error("", fasthttp.StatusNoContent)
 		return
@@ -77,7 +86,7 @@ func (h *Handler) handleUnitRequest(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	markup, err := h.surveyMarkupService.GetMarkup(unit.Id, matchedSurveyIds, "")
+	markup, err := h.surveyMarkupService.GetMarkup(unit.Id, matchedSurveyIds, "en")
 	if err != nil {
 		ctx.Error("", fasthttp.StatusNoContent)
 		return
@@ -90,18 +99,25 @@ func (h *Handler) handleUnitRequest(ctx *fasthttp.RequestCtx) {
 func (h *Handler) handleSurveyEvent(ctx *fasthttp.RequestCtx) {
 	prCtx := &context.ProceederContext{}
 
-	err := h.contextFiller.FillFromRequest(prCtx, ctx)
+	err := h.eventContextFiller.FillFromRequest(prCtx, ctx)
 	if err != nil {
 		ctx.Error("Invalid request", fasthttp.StatusBadRequest)
 		return
 	}
 
-	eventString := events.GetEventString(prCtx)
-
-	err = prCtx.MessageProducer.SendMessage([]byte(eventString))
-	if err != nil {
-		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+	completionEvent := &pb.CompletionEvent{
+		EventType:  int32(prCtx.EventType),
+		Timestamp:  prCtx.RequestTimestamp.Unix(),
+		SurveyId:   int32(prCtx.SurveyId),
+		QuestionId: int32(prCtx.QuestionId),
+		OptionIds:  utils.ConvertInts[int32](prCtx.OptionIds),
+		Geo:        prCtx.Country,
+		Lang:       prCtx.Language,
+		Gender:     0,
 	}
+
+	bytes, _ := proto.Marshal(completionEvent)
+	h.eventProducer.AsyncSendMessage(bytes)
 
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 }

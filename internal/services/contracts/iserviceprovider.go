@@ -3,13 +3,16 @@ package contracts
 import (
 	contextcontracts "project-survey-proceeder/internal/context/contracts"
 	"project-survey-proceeder/internal/dbcache"
+	eventcontracts "project-survey-proceeder/internal/events/contracts"
 	surveymarkupcontracts "project-survey-proceeder/internal/surveymarkup/contracts"
 	"project-survey-proceeder/internal/targeting/contracts"
 )
 
 type IServiceProvider interface {
-	GetContextFiller() contextcontracts.IRequestFiller
+	GetUnitContextFiller() contextcontracts.IRequestFiller
+	GetEventContextFiller() contextcontracts.IRequestFiller
 	GetDbRepo() *dbcache.Repo
 	GetTargetingService() contracts.ITargetingService
 	GetSurveyMarkupService() surveymarkupcontracts.ISurveyMarkupService
+	GetEventProducer() eventcontracts.IEventProducer
 }

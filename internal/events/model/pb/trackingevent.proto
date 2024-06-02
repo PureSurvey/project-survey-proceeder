@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "project-survey-proceeder/internal/events/model/pb";
+
+package pb;
+
+message TrackingEvent {
+  int32 event_type = 1;
+  int64 timestamp = 2;
+  int32 unit_id = 3;
+  string geo = 4;
+  string lang = 5;
+  int32 gender = 6;
+  repeated int32 survey_ids = 7;
+  repeated int32 mismatch_reason = 8;
+}
