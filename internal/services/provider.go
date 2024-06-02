@@ -50,6 +50,7 @@ func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontr
 
 	eventProducer := kafka.NewProducer(appConfiguration.EventsConfiguration)
 	err = eventProducer.Init()
+	defer eventProducer.CloseConnection()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

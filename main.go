@@ -13,13 +13,6 @@ import (
 )
 
 func main() {
-	//messageProducer, err := kafka.InitProducer(messageProducerUrl)
-	//if err != nil {
-	//	fmt.Printf("Error creating message producer: %v\n", err)
-	//	os.Exit(1)
-	//}
-	//defer messageProducer.CloseConnection()
-
 	parser := configuration.NewParser()
 	config, err := parser.Parse("appsettings.json")
 	if err != nil {
