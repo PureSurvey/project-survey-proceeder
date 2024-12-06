@@ -9,6 +9,7 @@ require (
 	github.com/ip2location/ip2location-go/v9 v9.7.0
 	github.com/microsoft/go-mssqldb v1.7.1
 	github.com/mssola/useragent v1.0.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/valyala/fasthttp v1.51.0
 	github.com/valyala/fastjson v1.6.4
 	golang.org/x/net v0.21.0

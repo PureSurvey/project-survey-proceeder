@@ -141,6 +141,10 @@ func (r *Repo) GetUnitById(id int) *objects.Unit {
 	return r.cache.Units[id]
 }
 
+func (r *Repo) GetUserById(id int) *objects.User {
+	return r.cache.Users[id]
+}
+
 func (r *Repo) GetSurveysByUnitId(id int) []*objects.Survey {
 	return r.cache.SurveysByUnit[id]
 }

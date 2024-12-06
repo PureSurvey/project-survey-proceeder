@@ -21,9 +21,12 @@ func main() {
 	}
 
 	serviceProvider := services.NewProvider(config)
+	defer serviceProvider.Dispose()
+
 	requestHandler := request.NewHandler(serviceProvider.GetDbRepo(), serviceProvider.GetUnitContextFiller(),
 		serviceProvider.GetEventContextFiller(),
-		serviceProvider.GetTargetingService(), serviceProvider.GetSurveyMarkupService(), serviceProvider.GetEventProducer())
+		serviceProvider.GetTargetingService(), serviceProvider.GetSurveyMarkupService(),
+		serviceProvider.GetEventProducer(), serviceProvider.GetRespondentsService())
 
 	go func() {
 		if err := fasthttp.ListenAndServe(config.Host, requestHandler.Handle); err != nil {

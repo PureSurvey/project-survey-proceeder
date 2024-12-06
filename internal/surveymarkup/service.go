@@ -15,10 +15,24 @@ import (
 
 type Service struct {
 	srvGeneratorAddr string
+
+	conn   *grpc.ClientConn
+	client model.SurveyMarkupGeneratorClient
 }
 
 func NewService(surveyGeneratorAddress string) contracts.ISurveyMarkupService {
 	return &Service{srvGeneratorAddr: surveyGeneratorAddress}
+}
+
+func (s *Service) Init() error {
+	var err error
+	s.conn, err = grpc.Dial(s.srvGeneratorAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("could not connect to SurveyMarkupGenerator: %v", err)
+	}
+
+	s.client = model.NewSurveyMarkupGeneratorClient(s.conn)
+	return nil
 }
 
 func (s *Service) GetMarkup(unitId int, surveyIds []int, language string) (string, error) {
@@ -27,6 +41,7 @@ func (s *Service) GetMarkup(unitId int, surveyIds []int, language string) (strin
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
+
 	c := model.NewSurveyMarkupGeneratorClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -43,4 +58,12 @@ func (s *Service) GetMarkup(unitId int, surveyIds []int, language string) (strin
 	}
 
 	return r.GetMarkup(), nil
+}
+
+func (s *Service) Close() error {
+	if s.conn != nil {
+		return s.conn.Close()
+	}
+
+	return nil
 }

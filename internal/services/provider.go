@@ -13,6 +13,7 @@ import (
 	"project-survey-proceeder/internal/geolocation"
 	geolocationcontracts "project-survey-proceeder/internal/geolocation/contracts"
 	"project-survey-proceeder/internal/pools"
+	"project-survey-proceeder/internal/respondents"
 	servicescontracts "project-survey-proceeder/internal/services/contracts"
 	"project-survey-proceeder/internal/surveymarkup"
 	surveymarkupcontracts "project-survey-proceeder/internal/surveymarkup/contracts"
@@ -32,6 +33,7 @@ type Provider struct {
 	dbRepo              *dbcache.Repo
 	decryptor           *trackers.Decryptor
 	eventProducer       eventcontracts.IEventProducer
+	usersService        *respondents.Service
 }
 
 func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontracts.IServiceProvider {
@@ -50,7 +52,12 @@ func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontr
 
 	eventProducer := kafka.NewProducer(appConfiguration.EventsConfiguration)
 	err = eventProducer.Init()
-	defer eventProducer.CloseConnection()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	surveyMarkupService := surveymarkup.NewService(appConfiguration.SurveyGeneratorAddress)
+	err = surveyMarkupService.Init()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -60,12 +67,13 @@ func NewProvider(appConfiguration *configuration.AppConfiguration) servicescontr
 		userAgentPool:       userAgentPool,
 		geolocationService:  geolocationService,
 		targetingService:    targeting.NewTargetingService(dbRepo),
-		surveyMarkupService: surveymarkup.NewService(appConfiguration.SurveyGeneratorAddress),
+		surveyMarkupService: surveyMarkupService,
 		dbRepo:              dbRepo,
 		decryptor:           decryptor,
 		eventProducer:       eventProducer,
 		unitContextFiller:   filler.NewUnitFiller(userAgentPool, geolocationService),
 		eventContextFiller:  filler.NewEventFiller(userAgentPool, geolocationService, decryptor),
+		usersService:        respondents.NewService(),
 	}
 
 	return provider
@@ -93,4 +101,23 @@ func (p *Provider) GetSurveyMarkupService() surveymarkupcontracts.ISurveyMarkupS
 
 func (p *Provider) GetEventProducer() eventcontracts.IEventProducer {
 	return p.eventProducer
+}
+
+func (p *Provider) GetRespondentsService() *respondents.Service {
+	return p.usersService
+}
+
+func (p *Provider) Dispose() error {
+	if p.surveyMarkupService != nil {
+		err := p.surveyMarkupService.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	if p.eventProducer != nil {
+		p.eventProducer.CloseConnection()
+	}
+
+	return nil
 }

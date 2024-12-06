@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/ferluci/fast-realip"
 	"github.com/valyala/fasthttp"
+	"hash/fnv"
 	"project-survey-proceeder/internal/context"
 	geolocationcontracts "project-survey-proceeder/internal/geolocation/contracts"
 	"project-survey-proceeder/internal/pools"
+	"strconv"
 	"time"
 )
 
@@ -29,6 +31,7 @@ func (f *Base) FillFromRequest(prCtx *context.ProceederContext, ctx *fasthttp.Re
 	f.fillUserAgent(prCtx, ctx)
 	f.fillIp(prCtx, ctx)
 	f.fillCountry(prCtx)
+	f.fillUaIpHash(prCtx)
 
 	return nil
 }
@@ -55,6 +58,19 @@ func (f *Base) fillCountry(prCtx *context.ProceederContext) {
 	if err != nil {
 		return
 	}
-
 	prCtx.Country = country
+
+	lang, err := f.GeolocationService.GetLanguageByCountry(prCtx.Country)
+	if err != nil {
+		return
+	}
+	prCtx.Language = lang
+}
+
+func (f *Base) fillUaIpHash(prCtx *context.ProceederContext) {
+	stringToHash := prCtx.UserAgent + prCtx.Ip
+
+	h := fnv.New32a()
+	h.Write([]byte(stringToHash))
+	prCtx.UaIpHash = strconv.Itoa(int(h.Sum32()))
 }
