@@ -51,10 +51,14 @@ func (p *Producer) CloseConnection() {
 
 func (p *Producer) listenToErrors() {
 	for {
-		err := <-p.producer.Errors()
-		log.Printf(err.Error())
-		filename := time.Now().UTC().String() + "_" + uuid.New().String()
-		val, _ := err.Msg.Value.Encode()
-		os.WriteFile(filename, val, os.ModeDir)
+		select {
+		case err := <-p.producer.Errors():
+			if err != nil {
+				log.Printf(err.Error())
+				filename := time.Now().UTC().String() + "_" + uuid.New().String()
+				val, _ := err.Msg.Value.Encode()
+				os.WriteFile(filename, val, os.ModeDir)
+			}
+		}
 	}
 }

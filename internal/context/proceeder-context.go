@@ -28,6 +28,7 @@ type ProceederContext struct {
 	Latitude   string
 
 	UserCookie string
+	UaIpHash   string
 
 	EventType      enums.EventType
 	MismatchReason enums.MismatchReason

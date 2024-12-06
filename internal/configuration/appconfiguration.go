@@ -10,7 +10,7 @@ type AppConfiguration struct {
 
 type DbCacheConfiguration struct {
 	ConnectionRetryCount     int    `json:"connectionRetryCount"`
-	ConnectionRetrySleepTime int    `json:"connectionRetryTimeout"`
+	ConnectionRetrySleepTime int    `json:"connectionRetrySleepTime"`
 	ConnectionString         string `json:"connectionString"`
 	StoredProcedure          string `json:"storedProcedure"`
 	ReloadSleepTime          int    `json:"reloadSleepTime"`

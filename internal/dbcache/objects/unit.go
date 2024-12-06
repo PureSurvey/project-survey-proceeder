@@ -6,21 +6,21 @@ type Unit struct {
 	UserId       int
 	AppearanceId int
 
-	OneSurveyPerDevice      bool
+	SurveyTakesPerDevice    int
 	MaximumSurveysPerDevice int
 	HideAfterNoSurveys      bool
 	MessageAfterNoSurveys   string
 }
 
 func NewUnit(id int, name string, userId int, appearanceId int,
-	oneSurveyPerDevice bool, maxSurveysPerDevice int, hideAfterNoSurveys bool,
+	surveyTakesPerDevice int, maxSurveysPerDevice int, hideAfterNoSurveys bool,
 	message string) *Unit {
 	return &Unit{
 		Id:                      id,
 		Name:                    name,
 		UserId:                  userId,
 		AppearanceId:            appearanceId,
-		OneSurveyPerDevice:      oneSurveyPerDevice,
+		SurveyTakesPerDevice:    surveyTakesPerDevice,
 		MaximumSurveysPerDevice: maxSurveysPerDevice,
 		HideAfterNoSurveys:      hideAfterNoSurveys,
 		MessageAfterNoSurveys:   message,

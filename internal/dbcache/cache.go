@@ -31,12 +31,14 @@ func (c *Cache) fillUsers(rows *sql.Rows) error {
 	for rows.Next() {
 		var id int
 		var role string
+		var isSubscribed bool
 		err := rows.Scan(&id, &role)
 		if err != nil {
 			return err
 		}
 
-		user := objects.NewUser(id, role)
+		isSubscribed = true
+		user := objects.NewUser(id, role, isSubscribed)
 		c.Users[id] = user
 	}
 
@@ -45,18 +47,18 @@ func (c *Cache) fillUsers(rows *sql.Rows) error {
 
 func (c *Cache) fillUnits(rows *sql.Rows) error {
 	for rows.Next() {
-		var id, userId, appearanceId, maxPerDevice int
-		var oneTakePerDevice, hideAfterNoSurveys bool
+		var id, userId, appearanceId, surveyTakesPerDevice, maxSurveysPerDevice int
+		var hideAfterNoSurveys bool
 		var name, message string
 
-		err := rows.Scan(&id, &name, &userId, &appearanceId, &oneTakePerDevice,
-			&maxPerDevice, &hideAfterNoSurveys, &message)
+		err := rows.Scan(&id, &name, &userId, &appearanceId, &surveyTakesPerDevice,
+			&maxSurveysPerDevice, &hideAfterNoSurveys, &message)
 		if err != nil {
 			return err
 		}
 
-		unit := objects.NewUnit(id, name, userId, appearanceId, oneTakePerDevice,
-			maxPerDevice, hideAfterNoSurveys, message)
+		unit := objects.NewUnit(id, name, userId, appearanceId, surveyTakesPerDevice,
+			maxSurveysPerDevice, hideAfterNoSurveys, message)
 		c.Units[id] = unit
 	}
 
@@ -151,14 +153,13 @@ func (c *Cache) fillCountryInTargetings(rows *sql.Rows) error {
 func (c *Cache) fillAppearances(rows *sql.Rows) error {
 	for rows.Next() {
 		var id, aType, templateId int
-		var params string
 
-		err := rows.Scan(&id, &aType, &templateId, &params)
+		err := rows.Scan(&id, &aType, &templateId)
 		if err != nil {
 			return err
 		}
 
-		appearance := objects.NewAppearance(id, enums2.EnumAppearanceType(aType), templateId, params)
+		appearance := objects.NewAppearance(id, enums2.EnumAppearanceType(aType), templateId)
 		c.Appearances[id] = appearance
 	}
 
